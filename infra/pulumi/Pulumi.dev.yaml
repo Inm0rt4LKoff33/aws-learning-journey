@@ -1,2 +1,4 @@
 environment:
   - poc-pulumi/dev
+config:
+  app:name: plm
