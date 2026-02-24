@@ -1,0 +1,11 @@
+name: network
+description: Pulumi Python project for networking in ASWS
+runtime:
+  name: python
+  options:
+    toolchain: pip
+    virtualenv: venv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-python

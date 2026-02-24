@@ -1,6 +1,0 @@
-environment:
-  - poc-pulumi/python
-config:
-  app:allowedSshCidr: 10.0.0.0/16
-  app:httpCidr: 0.0.0.0/0
-  app:vpcId: vpc-08a0324ce096c49f4

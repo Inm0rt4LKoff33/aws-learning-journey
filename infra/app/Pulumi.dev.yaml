@@ -1,0 +1,5 @@
+config:
+  app:name: plm
+  app:allowedSshCidr: 0.0.0.0/0
+  app:httpCidr: 0.0.0.0/0
+  app:disableSsh: false

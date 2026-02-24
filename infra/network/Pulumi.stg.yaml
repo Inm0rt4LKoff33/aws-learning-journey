@@ -1,0 +1,10 @@
+config:
+  aws:region: us-east-1
+  network:cidrBlock: 10.20.0.0/16
+  network:publicSubnetCidrs:
+    - 10.20.1.0/24
+    - 10.20.2.0/24
+  network:privateSubnetCidrs:
+    - 10.20.101.0/24
+    - 10.20.102.0/24
+  network:enableMultiAzNat: false
