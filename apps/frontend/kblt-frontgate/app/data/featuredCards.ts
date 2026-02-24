@@ -1,0 +1,48 @@
+import { Product } from "@/app/types/Product"
+
+export const featuredCards: Product[] = [
+    {
+    id: "1",
+    name: "Dark Charizard Holo",
+    game: "Pokemon",
+    price: 290.00,
+    imageUrl: "/resources/darkcharizard_teamrocket_holo.jpg",
+    set: "Team Rocket",
+    rarity: "Ultra Rare",
+    condition: "NM",
+    stock: 3,
+  },
+  {
+    id: "2",
+    name: "Blue-Eyes White Dragon (Dark Duel Stories)",
+    game: "YuGiOh",
+    price: 2800.00,
+    imageUrl: "/resources/blueeyeswhitedragon_vg-promos.jpg",
+    set: "Yu-Gi-Oh! Video Game Promotional Cards",
+    rarity: "Prismatic Secret Rare",
+    condition: "NM",
+    stock: 3,
+  },
+  {
+    id: "3",
+    name: "Black Lotus",
+    game: 'Magic',
+    price: 30000.00,
+    imageUrl: "/resources/blacklotus_beta.jpg",
+    set: "Beta",
+    rarity: "Ultra Rare",
+    condition: "NM",
+    stock: 3,
+  },
+  {
+    id: "4",
+    name: "Pikachu Sword & Shield JP Promo",
+    game: "Pokemon",
+    price: 1100.00,
+    imageUrl: "/resources/pikachu_sp-promo.jpg",
+    set: "S-P: Sword & Shield Promos",
+    rarity: "Common",
+    condition: "NM",
+    stock: 3,
+  },
+]

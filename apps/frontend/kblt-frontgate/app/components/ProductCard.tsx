@@ -1,52 +1,58 @@
 "use client"
 
-import { Product } from "@/app/types/Product"
+import Image from "next/image"
 import { useCartStore } from "@/app/store/cartStore"
-import Link from "next/link"
+import { ShoppingCart } from "lucide-react"
+import { Product } from "@/app/types/Product"
 
 type Props = {
-  product: Product
+  product : Product
 }
-
-const currency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-})
 
 export default function ProductCard({ product }: Props) {
   const addToCart = useCartStore((s) => s.addToCart)
 
+  const formattedPrice = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(product.price)
+
   return (
-    <article className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80 shadow-lg shadow-black/25 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10">
-      <Link href={`/product/${product.id}`} className="block">
-        <img
+    <div className="group bg-white rounded-3xl shadow-md hover:shadow-2xl transition duration-300 overflow-hidden flex flex-col">
+      
+      {/* Image */}
+      <div className="relative aspect-[610/835] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6 rounded-t-3xl">
+        <Image
           src={product.imageUrl}
           alt={product.name}
-          className="h-64 w-full object-cover"
+          fill
+          className="object-obtain drop-shadow-lg group-hover:scale-110 transition duration-500"
         />
-      </Link>
-      <div className="space-y-2 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-lg font-semibold text-slate-100">{product.name}</h3>
-          <p className="text-lg font-extrabold text-emerald-300">
-            {currency.format(product.price)}
-          </p>
-        </div>
 
-        <p className="text-sm text-slate-400">{product.set}</p>
+        {/* Badge Example */}
+        <span className="absolute top-4 left-4 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
+          Rare
+        </span>
+      </div>
 
-        <div className="flex items-center justify-between text-xs text-slate-400">
-          <span>{product.condition}</span>
-          <span>{product.rarity}</span>
-          <span>Stock: {product.stock}</span>
-        </div>
+      {/* Content */}
+      <div className="p-6 flex flex-col flex-1">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          {product.name}
+        </h3>
+
+        <p className="text-indigo-600 font-bold text-lg mb-6">
+          {formattedPrice}
+        </p>
 
         <button
           onClick={() => addToCart(product)}
-          className="mt-2 w-full rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-400">
-            Add to Cart
-          </button>
+          className="mt-auto flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl hover:bg-indigo-600 transition"
+        >
+          <ShoppingCart className="w-4 h-4" />
+          Add to Cart
+        </button>
       </div>
-    </article>
+    </div>
   )
 }
