@@ -3,3 +3,4 @@ config:
   app:allowedSshCidr: 0.0.0.0/0
   app:httpCidr: 0.0.0.0/0
   app:disableSsh: false
+  aws:region: us-east-1
