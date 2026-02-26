@@ -49,7 +49,7 @@ export default function Navbar() {
         {/* Links */}
         <div className="flex items-center gap-6">
           <Link href="/catalog" className="text-gray-700 hover:text-black">
-            Shop
+            Catalog
           </Link>
 
           <Link
@@ -62,6 +62,12 @@ export default function Navbar() {
                 {cart.length}
               </span>
             )}
+          </Link> 
+          <Link href='/profile' className="text-gray-700 hover:text-black">
+            Profile
+          </Link>
+          <Link href='/auth' className="text-gray-700 hover:text-black">
+            Login
           </Link>
         </div>
       </div>
