@@ -4,7 +4,7 @@ import RotatingHeroCard from "@/app/components/RotatingHeroCard"
 export default function Hero() {
   return (
     <section
-      className="relative min-h-screen flex flex-col lg:flex-row items-center justify-center gap-16 px-6 pt-24 pb-16 overflow-hidden"
+      className="relative min-h-[calc(100vh-72px)] flex flex-col lg:flex-row items-center justify-center gap-16 px-6 pt-8 pb-16 overflow-hidden"
       style={{ background: "var(--bg-base)" }}
     >
       {/* Radial glow — crimson left */}

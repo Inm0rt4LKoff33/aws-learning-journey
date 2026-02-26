@@ -186,3 +186,8 @@ body {
   outline: 2px solid var(--crimson);
   outline-offset: 2px;
 }
+
+/* ── TrustSection card hover ─────────────────────────────────────────────── */
+.trust-card:hover {
+  border-color: var(--crimson-dark) !important;
+}

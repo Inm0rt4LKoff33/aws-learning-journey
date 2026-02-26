@@ -51,29 +51,17 @@ export default function TrustSection() {
           {features.map((feature, i) => {
             const Icon = feature.icon
             return (
-              <div
-                key={i}
-                className="group flex flex-col gap-4 rounded-2xl border p-6 transition-colors hover:border-[--crimson-muted]"
-                style={{
-                  background: "var(--bg-elevated)",
-                  borderColor: "var(--bg-border)",
-                }}
+              <div key={i} className="trust-card group flex flex-col gap-4 rounded-2xl border p-6 transition-all duration-200"
+                style={{ background: "var(--bg-elevated)", borderColor: "var(--bg-border)" }}
               >
-                {/* Icon */}
                 <div
                   className="flex h-12 w-12 items-center justify-center rounded-xl border"
-                  style={{
-                    background: "var(--crimson-glow)",
-                    borderColor: "var(--crimson-muted)",
-                  }}
+                  style={{ background: "var(--crimson-glow)", borderColor: "var(--crimson-muted)" }}
                 >
                   <Icon className="h-5 w-5" style={{ color: "var(--crimson-light)" }} />
                 </div>
 
-                <h3
-                  className="text-base font-bold"
-                  style={{ color: "var(--text-primary)" }}
-                >
+                <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
                   {feature.title}
                 </h3>
 

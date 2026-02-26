@@ -10,19 +10,20 @@ type Props = {
   product: Product
 }
 
+// All rarity colors now use brand CSS variables so they work in both themes
 const rarityColors: Record<string, { bg: string; text: string; border: string }> = {
-  "Common":     { bg: "#2a2a2a",   text: "#a0a0a0", border: "#444" },
-  "Uncommon":   { bg: "#0d2d2a",   text: "#4ade80", border: "#166534" },
-  "Rare":       { bg: "#0c1a3a",   text: "#60a5fa", border: "#1e3a5f" },
-  "Holo Rare":  { bg: "#1e0a3a",   text: "#c084fc", border: "#4c1d95" },
-  "Ultra Rare": { bg: "var(--gold-muted)", text: "var(--gold-light)", border: "var(--gold-dark)" },
+  "Common":     { bg: "var(--bg-surface)",   text: "var(--text-secondary)", border: "var(--bg-border)" },
+  "Uncommon":   { bg: "#0d2d2a",             text: "#4ade80",               border: "#166534" },
+  "Rare":       { bg: "#0c1a3a",             text: "#60a5fa",               border: "#1e3a5f" },
+  "Holo Rare":  { bg: "#1e0a3a",             text: "#c084fc",               border: "#4c1d95" },
+  "Ultra Rare": { bg: "var(--gold-muted)",   text: "var(--gold-light)",     border: "var(--gold-dark)" },
 }
 
 const conditionColors: Record<string, string> = {
-  NM: "#4ade80",
-  LP: "#fbbf24",
+  NM: "var(--success)",
+  LP: "var(--warning)",
   MP: "#fb923c",
-  HP: "#f87171",
+  HP: "var(--error)",
 }
 
 export default function ProductCard({ product }: Props) {
@@ -69,13 +70,13 @@ export default function ProductCard({ product }: Props) {
             {product.rarity}
           </span>
 
-          {/* Condition dot */}
+          {/* Condition badge */}
           <span
             className="absolute top-3 right-3 text-xs font-bold px-2.5 py-1 rounded-full"
             style={{
-              background: "rgba(0,0,0,0.6)",
+              background: "rgba(0,0,0,0.55)",
               color: conditionColors[product.condition],
-              border: `1px solid ${conditionColors[product.condition]}40`,
+              border: `1px solid ${conditionColors[product.condition]}`,
             }}
           >
             {product.condition}
@@ -110,10 +111,7 @@ export default function ProductCard({ product }: Props) {
             onClick={() => addToCart(product)}
             disabled={product.stock === 0}
             className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              background: "var(--crimson)",
-              color: "#fff",
-            }}
+            style={{ background: "var(--crimson)", color: "#fff" }}
             onMouseEnter={(e) => (e.currentTarget.style.background = "var(--crimson-light)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "var(--crimson)")}
           >

@@ -1,30 +1,42 @@
 import { products } from "@/app/data/products"
-import ProductCard from "@/app/components/ProductCard"
+import CatalogClient from "./catalog-client"
+import { Suspense } from "react"
 
-export default function CatalogPage({
-  searchParams,
-}: {
-  searchParams: { search?: string }
-}) {
-  const search = searchParams.search?.toLowerCase() || ""
+type Props = {
+  searchParams: Promise<{ [key: string]: string | undefined }>
+}
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(search)
-  )
+export const metadata = {
+  title: "Catalog — KBLT",
+  description: "Browse rare and authentic trading cards across Pokémon, Yu-Gi-Oh!, and Magic: The Gathering.",
+}
+
+export default async function CatalogPage({ searchParams }: Props) {
+  // Next.js 15+: searchParams is a Promise
+  const params = await searchParams
+
+  // Pre-filter by game server-side so CatalogClient receives a smaller dataset
+  // when navigating from the Categories section (e.g. /catalog?game=Pokemon)
+  let filtered = [...products]
+  if (params.game) {
+    filtered = filtered.filter((p) => p.game === params.game)
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold mb-8">Shop Products</h1>
-
-      {filteredProducts.length === 0 && (
-        <p className="text-gray-500">No products found.</p>
-      )}
-
-      <div className="grid md:grid-cols-3 gap-8">
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-    </div>
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{ background: "var(--bg-base)" }}
+        >
+          <div
+            className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+            style={{ borderColor: "var(--crimson)" }}
+          />
+        </div>
+      }
+    >
+      <CatalogClient products={filtered} />
+    </Suspense>
   )
 }

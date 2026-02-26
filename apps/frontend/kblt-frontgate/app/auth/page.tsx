@@ -9,13 +9,13 @@ import Link from "next/link"
 type Tab = "login" | "register"
 
 export default function AuthPage() {
-  const [tab, setTab] = useState<Tab>("login")
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [tab,          setTab]          = useState<Tab>("login")
+  const [name,         setName]         = useState("")
+  const [email,        setEmail]        = useState("")
+  const [password,     setPassword]     = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState("")
 
   const { login, register } = useAuthStore()
   const router = useRouter()
@@ -24,57 +24,59 @@ export default function AuthPage() {
     e.preventDefault()
     setError("")
     setLoading(true)
-
-    const result =
-      tab === "login"
-        ? await login(email, password)
-        : await register(name, email, password)
-
+    const result = tab === "login"
+      ? await login(email, password)
+      : await register(name, email, password)
     setLoading(false)
-
-    if (!result.success) {
-      setError(result.error ?? "Something went wrong.")
-    } else {
-      router.push("/")
-    }
+    if (!result.success) setError(result.error ?? "Something went wrong.")
+    else router.push("/")
   }
 
   const switchTab = (t: Tab) => {
-    setTab(t)
-    setError("")
-    setName("")
-    setEmail("")
-    setPassword("")
+    setTab(t); setError("")
+    setName(""); setEmail(""); setPassword("")
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
+    <main
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
+    >
       <div className="w-full max-w-md">
 
-        {/* Logo / brand */}
+        {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold tracking-tight">
-            KBLT<span className="text-indigo-400">.</span>
+          <Link
+            href="/"
+            className="text-2xl font-black tracking-widest"
+            style={{ color: "var(--text-primary)", fontFamily: "var(--font-cinzel-decorative)" }}
+          >
+            KBLT<span style={{ color: "var(--gold)" }}>.</span>
           </Link>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-2 text-sm" style={{ color: "var(--text-muted)" }}>
             {tab === "login" ? "Welcome back" : "Create your account"}
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl bg-slate-800/60 border border-slate-700 p-8">
-
+        <div
+          className="rounded-2xl p-8"
+          style={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)" }}
+        >
           {/* Tabs */}
-          <div className="flex rounded-xl bg-slate-900/60 border border-slate-700 p-1 mb-8">
+          <div
+            className="flex rounded-xl p-1 mb-8"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--bg-border)" }}
+          >
             {(["login", "register"] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => switchTab(t)}
-                className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition ${
-                  tab === t
-                    ? "bg-indigo-600 text-white shadow"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+                className="flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all duration-200"
+                style={{
+                  background: tab === t ? "var(--crimson)" : "transparent",
+                  color:      tab === t ? "#fff"           : "var(--text-muted)",
+                }}
               >
                 {t === "login" ? "Sign In" : "Register"}
               </button>
@@ -83,41 +85,22 @@ export default function AuthPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
-            {/* Name (register only) */}
+            {/* Name — register only */}
             {tab === "register" && (
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  placeholder="John Doe"
-                  className="w-full rounded-xl bg-slate-900/60 border border-slate-700 px-4 py-3 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
+              <AuthField
+                label="Full Name" type="text"
+                value={name} onChange={setName} placeholder="John Doe"
+              />
             )}
 
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-                className="w-full rounded-xl bg-slate-900/60 border border-slate-700 px-4 py-3 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            <AuthField
+              label="Email" type="email"
+              value={email} onChange={setEmail} placeholder="you@example.com"
+            />
 
-            {/* Password */}
+            {/* Password with show/hide */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted)" }}>
                 Password
               </label>
               <div className="relative">
@@ -128,12 +111,18 @@ export default function AuthPage() {
                   required
                   minLength={6}
                   placeholder="••••••••"
-                  className="w-full rounded-xl bg-slate-900/60 border border-slate-700 px-4 py-3 pr-11 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-xl px-4 py-3 pr-11 text-sm outline-none"
+                  style={{
+                    background:  "var(--bg-surface)",
+                    border:      "1px solid var(--bg-border)",
+                    color:       "var(--text-primary)",
+                  }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
+                  style={{ color: "var(--text-muted)" }}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -142,7 +131,14 @@ export default function AuthPage() {
 
             {/* Error */}
             {error && (
-              <p className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-2.5 text-sm text-red-400">
+              <p
+                className="rounded-lg px-4 py-2.5 text-sm"
+                style={{
+                  background:  "rgba(248,113,113,0.08)",
+                  border:      "1px solid rgba(248,113,113,0.3)",
+                  color:       "var(--error)",
+                }}
+              >
                 {error}
               </p>
             )}
@@ -151,7 +147,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3.5 text-sm font-semibold transition"
+              className="btn-crimson mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -167,19 +163,54 @@ export default function AuthPage() {
             </button>
           </form>
 
-          {/* Demo hint for login */}
+          {/* Demo hint */}
           {tab === "login" && (
-            <p className="mt-4 text-center text-xs text-slate-500">
-              Demo account: <span className="text-slate-400">demo@kblt.com</span> / <span className="text-slate-400">password123</span>
+            <p className="mt-5 text-center text-xs" style={{ color: "var(--text-muted)" }}>
+              Demo:{" "}
+              <span style={{ color: "var(--text-secondary)" }}>demo@kblt.com</span>
+              {" / "}
+              <span style={{ color: "var(--text-secondary)" }}>password123</span>
             </p>
           )}
         </div>
 
-        <p className="mt-4 text-center text-xs text-slate-500">
+        <p className="mt-4 text-center text-xs" style={{ color: "var(--text-muted)" }}>
           By continuing you agree to our{" "}
-          <span className="text-slate-400 underline cursor-pointer">Terms of Service</span>
+          <span className="underline cursor-pointer" style={{ color: "var(--text-secondary)" }}>
+            Terms of Service
+          </span>
         </p>
       </div>
     </main>
+  )
+}
+
+// ── Reusable field ────────────────────────────────────────────────────────────
+function AuthField({ label, type, value, onChange, placeholder }: {
+  label: string
+  type: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-muted)" }}>
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required
+        placeholder={placeholder}
+        className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+        style={{
+          background: "var(--bg-surface)",
+          border:     "1px solid var(--bg-border)",
+          color:      "var(--text-primary)",
+        }}
+      />
+    </div>
   )
 }

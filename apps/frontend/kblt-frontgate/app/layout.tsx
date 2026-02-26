@@ -24,7 +24,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "KBLT — Rare Trading Cards",
+  title: "Kobold's Tavern — Yours true and only real TCG tavern",
   description: "Discover rare and authentic trading cards curated for serious collectors.",
 }
 
@@ -40,7 +40,14 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <NavBar />
-          {children}
+          {/*
+            pt-[72px] compensates for the fixed navbar height so no page
+            content is hidden behind it. Hero overrides this with its own
+            pt-24 for the extra breathing room the hero section needs.
+          */}
+          <div className="pt-[72px]">
+            {children}
+          </div>
           <Footer />
         </ThemeProvider>
       </body>
