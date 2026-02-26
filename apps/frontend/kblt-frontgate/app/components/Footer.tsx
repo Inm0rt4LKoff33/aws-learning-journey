@@ -2,92 +2,78 @@ import Link from "next/link"
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 mt-24">
-      <div className="mx-auto max-w-7xl px-6 py-16">
-        
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
-          
+    <footer
+      className="border-t py-12"
+      style={{ background: "var(--bg-surface)", borderColor: "var(--bg-border)" }}
+    >
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+
           {/* Brand */}
           <div>
-            <h3 className="text-xl font-bold text-white mb-4">
-              TCG Market
-            </h3>
-            <p className="text-sm text-gray-400">
-              The modern marketplace for collectors and competitive players.
-              Buy rare, verified trading cards with confidence.
+            <p
+              className="text-xl font-black tracking-widest mb-3"
+              style={{ color: "var(--gold)", fontFamily: "var(--font-cinzel-decorative)" }}
+            >
+              KBLT
+            </p>
+            <p className="text-sm leading-relaxed max-w-xs" style={{ color: "var(--text-muted)" }}>
+              Rare and authentic trading cards curated for serious collectors. Pokémon, Yu-Gi-Oh!, and Magic: The Gathering.
             </p>
           </div>
 
-          {/* Shop */}
+          {/* Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Shop</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/catalog" className="hover:text-white transition">
-                  All Cards
+            <p
+              className="text-xs font-semibold uppercase tracking-widest mb-4"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Shop
+            </p>
+            <div className="flex flex-col gap-2">
+              {[["Catalog", "/catalog"], ["Pokémon", "/catalog?game=Pokemon"], ["Yu-Gi-Oh!", "/catalog?game=YuGiOh"], ["Magic", "/catalog?game=Magic"]].map(([label, href]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="text-sm transition-colors"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {label}
                 </Link>
-              </li>
-              <li>
-                <Link href="/catalog?featured=true" className="hover:text-white transition">
-                  Featured
-                </Link>
-              </li>
-              <li>
-                <Link href="/cart" className="hover:text-white transition">
-                  Cart
-                </Link>
-              </li>
-            </ul>
+              ))}
+            </div>
           </div>
 
-          {/* Categories */}
+          {/* Account */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Categories</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/catalog?category=pokemon" className="hover:text-white transition">
-                  Pokémon
+            <p
+              className="text-xs font-semibold uppercase tracking-widest mb-4"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Account
+            </p>
+            <div className="flex flex-col gap-2">
+              {[["Sign In", "/auth"], ["Profile", "/profile"], ["Order History", "/profile"], ["Cart", "/cart"]].map(([label, href]) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="text-sm transition-colors"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {label}
                 </Link>
-              </li>
-              <li>
-                <Link href="/catalog?category=yugioh" className="hover:text-white transition">
-                  Yu-Gi-Oh!
-                </Link>
-              </li>
-              <li>
-                <Link href="/catalog?category=mtg" className="hover:text-white transition">
-                  Magic: The Gathering
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/privacy" className="hover:text-white transition">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="hover:text-white transition">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-white transition">
-                  Contact
-                </Link>
-              </li>
-            </ul>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-16 border-t border-gray-800 pt-8 text-sm text-gray-500 text-center">
-          © {new Date().getFullYear()} TCG Market. All rights reserved.
+        {/* Bottom */}
+        <div
+          className="border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs"
+          style={{ borderColor: "var(--bg-border)", color: "var(--text-muted)" }}
+        >
+          <p>© {new Date().getFullYear()} KBLT. All rights reserved.</p>
+          <p>Built with Next.js · Deployed on AWS</p>
         </div>
       </div>
     </footer>

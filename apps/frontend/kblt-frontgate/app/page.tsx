@@ -4,7 +4,7 @@ import { products } from "@/app/data/products"
 import Link from "next/link"
 import FeaturedProducts from "@/app/components/FeaturedProducts"
 import Categories from "@/app/components/Categories"
-import TrustSection from "./components/TrustSection"
+import TrustSection from "@/app/components/TrustSection"
 
 const featuredProducts = products.slice(0, 6)
 
