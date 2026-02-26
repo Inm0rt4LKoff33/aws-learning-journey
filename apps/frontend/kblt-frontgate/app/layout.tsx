@@ -4,6 +4,7 @@ import ThemeProvider from "./components/ThemeProvider"
 import type { Metadata } from "next"
 import { Cinzel_Decorative, Crimson_Text, Geist_Mono } from "next/font/google"
 import "./globals.css"
+import { Analytics } from "@vercel/analytics/next"
 
 const cinzelDecorative = Cinzel_Decorative({
   variable: "--font-cinzel-decorative",
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body
         className={`${cinzelDecorative.variable} ${crimsonText.variable} ${geistMono.variable} antialiased`}
       >
+        <Analytics />
         <ThemeProvider>
           <NavBar />
           {/*
