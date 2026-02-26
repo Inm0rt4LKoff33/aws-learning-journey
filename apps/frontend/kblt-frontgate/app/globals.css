@@ -1,36 +1,188 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── KBLT Brand Design System ─────────────────────────────────────────────
+   Two themes: dark tavern (default) + aged parchment (light)
+   Toggle via data-theme="dark" | data-theme="light" on <html>
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ── Dark theme (Tavern) ─────────────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-base:       #0a0605;
+  --bg-surface:    #140c0b;
+  --bg-elevated:   #1e1210;
+  --bg-border:     #2e1c19;
+
+  /* Parchment card surfaces */
+  --parchment:        #faf3e8;
+  --parchment-dim:    #f0e6d0;
+  --parchment-border: #d9c9aa;
+
+  /* Crimson */
+  --crimson-light: #e8455a;
+  --crimson:       #c41e3a;
+  --crimson-dark:  #8b1a1a;
+  --crimson-muted: #4a1010;
+  --crimson-glow:  rgba(196, 30, 58, 0.15);
+
+  /* Gold */
+  --gold-light:    #f0c040;
+  --gold:          #d4a017;
+  --gold-dark:     #b8860b;
+  --gold-muted:    #3d2e08;
+  --gold-glow:     rgba(212, 160, 23, 0.15);
+
+  /* Text */
+  --text-primary:  #f5e6d3;
+  --text-secondary:#a08070;
+  --text-muted:    #6b5047;
+
+  /* Semantic */
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --error:   #f87171;
+
+  color-scheme: dark;
 }
 
+/* ── Light theme (Aged Parchment) ────────────────────────────────────────── */
+[data-theme="light"] {
+  /* Backgrounds — warm ivory/parchment surfaces */
+  --bg-base:       #f5ece0;
+  --bg-surface:    #ede0cc;
+  --bg-elevated:   #faf3e8;
+  --bg-border:     #d9c9aa;
+
+  /* Parchment card surfaces — slightly richer for contrast against bg */
+  --parchment:        #fff8f0;
+  --parchment-dim:    #f5ebe0;
+  --parchment-border: #c8b090;
+
+  /* Crimson — same hue, slightly deeper for legibility on light bg */
+  --crimson-light: #d63350;
+  --crimson:       #a8172e;
+  --crimson-dark:  #7a1020;
+  --crimson-muted: #f5d0d8;
+  --crimson-glow:  rgba(168, 23, 46, 0.12);
+
+  /* Gold — deeper for legibility on light bg */
+  --gold-light:    #c8860a;
+  --gold:          #a06808;
+  --gold-dark:     #7a4e06;
+  --gold-muted:    #f5e8cc;
+  --gold-glow:     rgba(160, 104, 8, 0.12);
+
+  /* Text — dark ink on parchment */
+  --text-primary:  #1e0f08;
+  --text-secondary:#5a3a28;
+  --text-muted:    #8a6a58;
+
+  /* Semantic */
+  --success: #166534;
+  --warning: #92400e;
+  --error:   #991b1b;
+
+  color-scheme: light;
+}
+
+/* ── Theme applied to @theme ─────────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
+  --font-display: var(--font-cinzel-decorative), serif;
+  --font-body:    var(--font-crimson-text), serif;
+  --font-mono:    var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
-  100% { transform: translateY(0px); }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+/* ── Base ────────────────────────────────────────────────────────────────── */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body), Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--crimson-dark); }
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+@keyframes float {
+  0%   { transform: translateY(0px)   rotate(-1deg); }
+  50%  { transform: translateY(-14px) rotate(1deg);  }
+  100% { transform: translateY(0px)   rotate(-1deg); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1;    }
+  50%       { opacity: 0.85; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.animate-float      { animation: float      6s ease-in-out infinite; }
+.animate-shimmer    { animation: shimmer    3s linear     infinite; }
+.animate-flicker    { animation: flicker    4s ease-in-out infinite; }
+.animate-fade-in-up { animation: fadeInUp 0.5s ease        forwards; }
+
+/* ── Gold shimmer text ───────────────────────────────────────────────────── */
+.text-gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--gold-dark)  0%,
+    var(--gold-light) 40%,
+    var(--gold)       60%,
+    var(--gold-dark)  100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ── Utility classes ─────────────────────────────────────────────────────── */
+.card-parchment {
+  background: var(--parchment);
+  border: 1px solid var(--parchment-border);
+  color: var(--text-primary);
+}
+
+.btn-crimson {
+  background: var(--crimson);
+  color: #fff;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-crimson:hover {
+  background: var(--crimson-light);
+  box-shadow: 0 0 20px var(--crimson-glow);
+}
+
+.btn-gold {
+  background: var(--gold-dark);
+  color: var(--bg-base);
+  font-weight: 700;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-gold:hover {
+  background: var(--gold);
+  box-shadow: 0 0 20px var(--gold-glow);
+}
+
+/* ── Focus ring ──────────────────────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 2px;
 }
