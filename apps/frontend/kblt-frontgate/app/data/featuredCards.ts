@@ -1,48 +1,17 @@
 import { Product } from "@/app/types/Product"
+import { products } from "@/app/data/products"
 
-export const featuredCards: Product[] = [
-    {
-    id: "1",
-    name: "Dark Charizard Holo",
-    game: "Pokemon",
-    price: 290.00,
-    imageUrl: "/resources/darkcharizard_teamrocket_holo.jpg",
-    set: "Team Rocket",
-    rarity: "Ultra Rare",
-    condition: "NM",
-    stock: 3,
-  },
-  {
-    id: "2",
-    name: "Blue-Eyes White Dragon (Dark Duel Stories)",
-    game: "YuGiOh",
-    price: 2800.00,
-    imageUrl: "/resources/blueeyeswhitedragon_vg-promos.jpg",
-    set: "Yu-Gi-Oh! Video Game Promotional Cards",
-    rarity: "Prismatic Secret Rare",
-    condition: "NM",
-    stock: 3,
-  },
-  {
-    id: "3",
-    name: "Black Lotus",
-    game: 'Magic',
-    price: 30000.00,
-    imageUrl: "/resources/blacklotus_beta.jpg",
-    set: "Beta",
-    rarity: "Ultra Rare",
-    condition: "NM",
-    stock: 3,
-  },
-  {
-    id: "4",
-    name: "Pikachu Sword & Shield JP Promo",
-    game: "Pokemon",
-    price: 1100.00,
-    imageUrl: "/resources/pikachu_sp-promo.jpg",
-    set: "S-P: Sword & Shield Promos",
-    rarity: "Common",
-    condition: "NM",
-    stock: 3,
-  },
+// Hand-picked by ID — one marquee card per game + the two most iconic Pokemon.
+// These are used by RotatingHeroCard (hero carousel) and FeaturedProducts (homepage grid).
+// To change the selection, just update the IDs below to match app/data/products.ts.
+const FEATURED_IDS = [
+  "9",  // Charizard — Base Set Shadowless Holo Rare (Pokemon)
+  "6",  // Blastoise — Base Set Shadowless Holo Rare (Pokemon)
+  "3",  // Venusaur  — Base Set Shadowless Holo Rare (Pokemon)
+  "12", // Blue-Eyes White Dragon — LOB Ultra Rare (YuGiOh)
+  "19", // Black Lotus — Beta Edition Ultra Rare (Magic)
 ]
+
+export const featuredCards: Product[] = FEATURED_IDS
+  .map((id) => products.find((p) => p.id === id))
+  .filter((p): p is Product => p !== undefined)
