@@ -1,0 +1,112 @@
+// Prisma schema for KBLT TCG Store
+// Hosted on Supabase (PostgreSQL)
+// Run: npm run db:generate  → regenerate client after schema changes
+// Run: npm run db:migrate   → apply migrations to the database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Supabase requires directUrl for migrations
+  directUrl = env("DIRECT_URL")
+}
+
+// ── User ──────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  addresses Address[]
+  orders    Order[]
+
+  @@map("users")
+}
+
+// ── Address ───────────────────────────────────────────────────────────────────
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String   @default("Home") // e.g. "Home", "Office", "Mom's place"
+  street    String
+  city      String
+  state     String
+  zip       String
+  country   String   @default("US")
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
+// ── Product ───────────────────────────────────────────────────────────────────
+
+model Product {
+  id         String   @id @default(cuid())
+  name       String
+  game       String   // "Pokemon" | "YuGiOh" | "Magic"
+  set        String
+  rarity     String   // "Common" | "Uncommon" | "Rare" | "Holo Rare" | "Ultra Rare"
+  condition  String   // "NM" | "LP" | "MP" | "HP"
+  price      Decimal  @db.Decimal(10, 2)
+  stock      Int      @default(0)
+  imageUrl   String
+  isFeatured Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+// ── Order ─────────────────────────────────────────────────────────────────────
+
+model Order {
+  id        String      @id @default(cuid())
+  userId    String
+  addressId String
+  status    OrderStatus @default(Processing)
+  subtotal  Decimal     @db.Decimal(10, 2)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address Address   @relation(fields: [addressId], references: [id])
+  items   OrderItem[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  Processing
+  Shipped
+  Delivered
+}
+
+// ── OrderItem ─────────────────────────────────────────────────────────────────
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  quantity    Int
+  priceAtTime Decimal @db.Decimal(10, 2) // snapshot — immune to future price changes
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
