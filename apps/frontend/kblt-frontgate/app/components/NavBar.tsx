@@ -2,24 +2,30 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { ShoppingCart, Search, User, LogOut, Menu, X } from "lucide-react"
 import { useCartStore } from "@/app/store/cartStore"
 import { useAuthStore } from "@/app/store/authStore"
 import ThemeToggle from "@/app/components/ThemeToggle"
 
-export default function Navbar() {
+// ── NavbarContent ─────────────────────────────────────────────────────────────
+// Isolated so useSearchParams() sits inside a Suspense boundary.
+// Next.js 15 App Router requires this — any component calling useSearchParams()
+// outside Suspense will throw at build time.
+
+function NavbarContent() {
   const cartItems = useCartStore((s) => s.items)
   const { user, isAuthenticated, logout } = useAuthStore()
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [search, setSearch] = useState("")
+  const [search,     setSearch]     = useState("")
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [scrolled,   setScrolled]   = useState(false)
 
   const cartCount = cartItems.reduce((s, i) => s + i.quantity, 0)
 
+  // Keep input in sync with URL — handles browser back/forward
   useEffect(() => {
     setSearch(searchParams.get("q") ?? "")
   }, [searchParams])
@@ -32,7 +38,15 @@ export default function Navbar() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (search.trim()) router.push(`/catalog?q=${encodeURIComponent(search)}`)
+    const q = search.trim()
+    // Fix: empty submit now clears the ?q= param instead of doing nothing
+    router.push(q ? `/catalog?q=${encodeURIComponent(q)}` : "/catalog")
+    setMobileOpen(false)
+  }
+
+  const clearSearch = () => {
+    setSearch("")
+    router.push("/catalog")
   }
 
   const handleLogout = () => {
@@ -45,9 +59,9 @@ export default function Navbar() {
     <nav
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       style={{
-        background: "var(--bg-surface)",
+        background:   "var(--bg-surface)",
         borderBottom: scrolled ? "1px solid var(--bg-border)" : "1px solid transparent",
-        boxShadow: scrolled ? "0 4px 24px rgba(0,0,0,0.3)" : "none",
+        boxShadow:    scrolled ? "0 4px 24px rgba(0,0,0,0.3)" : "none",
       }}
     >
       <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between gap-6">
@@ -61,14 +75,11 @@ export default function Navbar() {
           KBLT
         </Link>
 
-        {/* Search */}
+        {/* Desktop search */}
         <form
           onSubmit={handleSearch}
           className="hidden md:flex flex-1 max-w-sm items-center gap-2 rounded-xl border px-4 py-2 transition-colors"
-          style={{
-            background: "var(--bg-elevated)",
-            borderColor: "var(--bg-border)",
-          }}
+          style={{ background: "var(--bg-elevated)", borderColor: "var(--bg-border)" }}
         >
           <Search className="w-4 h-4 shrink-0" style={{ color: "var(--text-muted)" }} />
           <input
@@ -79,6 +90,17 @@ export default function Navbar() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {search && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="shrink-0 transition-opacity hover:opacity-70"
+              style={{ color: "var(--text-muted)" }}
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </form>
 
         {/* Desktop nav */}
@@ -104,7 +126,6 @@ export default function Navbar() {
             )}
           </Link>
 
-          {/* Theme toggle */}
           <ThemeToggle />
 
           {/* Auth */}
@@ -158,7 +179,7 @@ export default function Navbar() {
             className="flex items-center gap-2 rounded-xl border px-4 py-2"
             style={{ background: "var(--bg-surface)", borderColor: "var(--bg-border)" }}
           >
-            <Search className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
+            <Search className="w-4 h-4 shrink-0" style={{ color: "var(--text-muted)" }} />
             <input
               type="text"
               placeholder="Search cards…"
@@ -167,6 +188,17 @@ export default function Navbar() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {search && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="shrink-0 transition-opacity hover:opacity-70"
+                style={{ color: "var(--text-muted)" }}
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </form>
 
           <Link href="/catalog" className="text-sm font-medium" style={{ color: "var(--text-primary)" }} onClick={() => setMobileOpen(false)}>
@@ -193,5 +225,24 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+  )
+}
+
+// ── Navbar (default export) ───────────────────────────────────────────────────
+// Suspense wrapper satisfies Next.js 15's requirement for useSearchParams().
+// The fallback is a height-matched skeleton to prevent layout shift.
+
+export default function Navbar() {
+  return (
+    <Suspense
+      fallback={
+        <nav
+          className="fixed top-0 left-0 right-0 z-50 h-[72px]"
+          style={{ background: "var(--bg-surface)" }}
+        />
+      }
+    >
+      <NavbarContent />
+    </Suspense>
   )
 }
