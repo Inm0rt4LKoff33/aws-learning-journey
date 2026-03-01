@@ -1,12 +1,48 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
+// ── API Client ────────────────────────────────────────────────────────────────
+// Central fetch wrapper used by all API modules.
+// Handles: base URL, Authorization header, JSON parsing, error normalization.
 
+const BASE_URL =
+  typeof window === "undefined"
+    ? (process.env.API_URL          ?? "http://localhost:3001") // server components
+    : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") // browser
+
+// In-memory token — set by authStore on login/register.
+// Falls back to localStorage on first request after a page refresh,
+// before Zustand's onRehydrateStorage has had a chance to fire.
 let _token: string | null = null
 
-export const tokenManager = {
-  get: ()              => _token,
-  set: (t: string)     => { _token = t },
-  clear: ()            => { _token = null },
+function getToken(): string | null {
+  if (_token) return _token
+
+  // Fallback: read directly from the persisted Zustand auth store in localStorage.
+  // This covers the window between page load and rehydration completing.
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("kblt-auth")
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        const token  = parsed?.state?.token ?? null
+        if (token) {
+          _token = token // cache it so subsequent calls don't re-parse
+          return _token
+        }
+      }
+    } catch {
+      // localStorage parse failed — continue without token
+    }
+  }
+
+  return null
 }
+
+export const tokenManager = {
+  get:   ()             => _token,
+  set:   (t: string)    => { _token = t },
+  clear: ()             => { _token = null },
+}
+
+// ── Core request function ─────────────────────────────────────────────────────
 
 type RequestOptions = {
   method:  "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
@@ -27,6 +63,7 @@ export class ApiError extends Error {
 
 async function request<T>({ method, path, body, params }: RequestOptions): Promise<T> {
   let url = `${BASE_URL}${path}`
+
   if (params) {
     const qs = Object.entries(params)
       .filter(([, v]) => v !== undefined && v !== "")
@@ -39,7 +76,7 @@ async function request<T>({ method, path, body, params }: RequestOptions): Promi
     "Content-Type": "application/json",
   }
 
-  const token = tokenManager.get()
+  const token = getToken()
   if (token) {
     headers["Authorization"] = `Bearer ${token}`
   }
