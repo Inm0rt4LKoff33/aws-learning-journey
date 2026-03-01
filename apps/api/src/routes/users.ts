@@ -24,22 +24,22 @@ export default async function userRoutes(server: FastifyInstance) {
       body: {
         type: "object",
         properties: {
-          name:  { type: "string", minLength: 2, maxLength: 100 }, // NEW — maxLength
+          name:  { type: "string", minLength: 2 },
           email: { type: "string", format: "email" },
         },
-        // NEW — rejects empty {} body so a no-op PATCH returns an error
-        // instead of silently succeeding with nothing updated
-        minProperties: 1,
       },
     },
   }, async (req, reply) => {
     const { name, email } = req.body
 
+    // If changing email, check it isn't already taken
     if (email) {
       const taken = await server.prisma.user.findFirst({
         where: { email, NOT: { id: req.user.userId } },
       })
-      if (taken) return reply.code(409).send({ error: "Email already in use." })
+      if (taken) {
+        return reply.code(409).send({ error: "Email already in use." })
+      }
     }
 
     const updated = await server.prisma.user.update({

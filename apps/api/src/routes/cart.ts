@@ -1,15 +1,20 @@
 import { FastifyInstance } from "fastify"
 import { Product } from "@prisma/client"
-import { productIdParam } from "../lib/schemas" // NEW
+
+// Cart lives entirely in Redis as a Hash: cart:{userId} → { [productId]: quantity }
+// Nothing is persisted to Postgres until POST /orders converts the cart to an order.
 
 type CartItem = Product & { quantity: number }
 
 export default async function cartRoutes(server: FastifyInstance) {
 
+  // All cart routes require auth
   server.addHook("preHandler", server.authenticate)
 
   const cartKey = (userId: string) => `cart:${userId}`
 
+  // Helper: enrich raw Redis cart hash with product details from Postgres.
+  // Explicit return type prevents TypeScript from inferring the spread as any.
   async function getEnrichedCart(userId: string): Promise<CartItem[]> {
     const raw: Record<string, string> = await server.redis.hgetall(cartKey(userId))
     if (!raw || Object.keys(raw).length === 0) return []
@@ -27,7 +32,7 @@ export default async function cartRoutes(server: FastifyInstance) {
 
   // ── GET /cart ──────────────────────────────────────────────────────────────
   server.get("/cart", async (req, reply) => {
-    const items    = await getEnrichedCart(req.user.userId)
+    const items = await getEnrichedCart(req.user.userId)
     const subtotal = items.reduce((s, i) => s + Number(i.price) * i.quantity, 0)
     return reply.send({ items, subtotal })
   })
@@ -41,7 +46,7 @@ export default async function cartRoutes(server: FastifyInstance) {
         type: "object",
         required: ["productId"],
         properties: {
-          productId: { type: "string", minLength: 1 }, // NEW — rejects empty string
+          productId: { type: "string" },
           quantity:  { type: "number", minimum: 1, default: 1 },
         },
       },
@@ -49,16 +54,20 @@ export default async function cartRoutes(server: FastifyInstance) {
   }, async (req, reply) => {
     const { productId, quantity = 1 } = req.body
 
-    const product = await server.prisma.product.findUnique({ where: { id: productId } })
+    const product = await server.prisma.product.findUnique({
+      where: { id: productId },
+    })
     if (!product) return reply.code(404).send({ error: "Product not found." })
     if (product.stock === 0) return reply.code(409).send({ error: "Product is out of stock." })
 
-    const key     = cartKey(req.user.userId)
+    const key = cartKey(req.user.userId)
     const current = await server.redis.hget(key, productId)
     const newQty  = (current ? parseInt(current, 10) : 0) + quantity
 
     if (newQty > product.stock) {
-      return reply.code(409).send({ error: `Only ${product.stock} units available.` })
+      return reply.code(409).send({
+        error: `Only ${product.stock} units available.`,
+      })
     }
 
     await server.redis.hset(key, productId, newQty)
@@ -73,7 +82,6 @@ export default async function cartRoutes(server: FastifyInstance) {
     Body:   { quantity: number }
   }>("/cart/items/:productId", {
     schema: {
-      params: productIdParam, // NEW — validates :productId
       body: {
         type: "object",
         required: ["quantity"],
@@ -92,11 +100,15 @@ export default async function cartRoutes(server: FastifyInstance) {
       return reply.send({ message: "Item removed." })
     }
 
-    const product = await server.prisma.product.findUnique({ where: { id: productId } })
+    const product = await server.prisma.product.findUnique({
+      where: { id: productId },
+    })
     if (!product) return reply.code(404).send({ error: "Product not found." })
 
     if (quantity > product.stock) {
-      return reply.code(409).send({ error: `Only ${product.stock} units available.` })
+      return reply.code(409).send({
+        error: `Only ${product.stock} units available.`,
+      })
     }
 
     await server.redis.hset(key, productId, quantity)
@@ -105,9 +117,7 @@ export default async function cartRoutes(server: FastifyInstance) {
 
   // ── DELETE /cart/items/:productId ──────────────────────────────────────────
   server.delete<{ Params: { productId: string } }>(
-    "/cart/items/:productId", {
-      schema: { params: productIdParam }, // NEW — validates :productId
-    },
+    "/cart/items/:productId",
     async (req, reply) => {
       await server.redis.hdel(cartKey(req.user.userId), req.params.productId)
       return reply.code(204).send()

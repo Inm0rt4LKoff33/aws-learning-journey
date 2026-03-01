@@ -1,11 +1,11 @@
 import { FastifyInstance } from "fastify"
 import { Prisma } from "@prisma/client"
 import { getStockInfo } from "../lib/stock"
-import { idParam, productFilterQuery } from "../lib/schemas" // NEW
 
 export default async function productRoutes(server: FastifyInstance) {
 
   // ── GET /products ──────────────────────────────────────────────────────────
+  // Supports: ?game= &rarity= &condition= &sort= &page= &limit=
   server.get<{
     Querystring: {
       game?:      string
@@ -16,9 +16,7 @@ export default async function productRoutes(server: FastifyInstance) {
       page?:      string
       limit?:     string
     }
-  }>("/products", {
-    schema: { querystring: productFilterQuery }, // NEW — validates & bounds query params
-  }, async (req, reply) => {
+  }>("/products", async (req, reply) => {
     const {
       game, rarity, condition, search,
       sort  = "name-asc",
@@ -26,9 +24,8 @@ export default async function productRoutes(server: FastifyInstance) {
       limit = "20",
     } = req.query
 
-    const pageNum  = parseInt(page)
-    const limitNum = parseInt(limit)
-    const skip     = (pageNum - 1) * limitNum
+    const skip = (parseInt(page) - 1) * parseInt(limit)
+    const take = parseInt(limit)
 
     const where: Prisma.ProductWhereInput = {
       ...(game      && { game }),
@@ -42,6 +39,8 @@ export default async function productRoutes(server: FastifyInstance) {
       }),
     }
 
+    // Typed explicitly so "asc"/"desc" resolve to SortOrder literals,
+    // not plain strings — this is what was causing the type error
     const orderByMap: Record<string, Prisma.ProductOrderByWithRelationInput> = {
       "name-asc":   { name:  Prisma.SortOrder.asc  },
       "name-desc":  { name:  Prisma.SortOrder.desc },
@@ -53,7 +52,7 @@ export default async function productRoutes(server: FastifyInstance) {
       orderByMap[sort] ?? { name: Prisma.SortOrder.asc }
 
     const [products, total] = await server.prisma.$transaction([
-      server.prisma.product.findMany({ where, orderBy, skip, take: limitNum }),
+      server.prisma.product.findMany({ where, orderBy, skip, take }),
       server.prisma.product.count({ where }),
     ])
 
@@ -61,9 +60,9 @@ export default async function productRoutes(server: FastifyInstance) {
       products,
       pagination: {
         total,
-        page:       pageNum,
-        limit:      limitNum,
-        totalPages: Math.ceil(total / limitNum),
+        page:       parseInt(page),
+        limit:      take,
+        totalPages: Math.ceil(total / take),
       },
     })
   })
@@ -78,21 +77,21 @@ export default async function productRoutes(server: FastifyInstance) {
   })
 
   // ── GET /products/:id ──────────────────────────────────────────────────────
-  server.get<{ Params: { id: string } }>("/products/:id", {
-    schema: { params: idParam }, // NEW — rejects empty/missing id
-  }, async (req, reply) => {
+  // Attaches low-stock warning based on soft reservation from Redis carts
+  server.get<{ Params: { id: string } }>("/products/:id", async (req, reply) => {
     const product = await server.prisma.product.findUnique({
       where: { id: req.params.id },
     })
 
     if (!product) return reply.code(404).send({ error: "Product not found." })
 
+    // Optionally read userId from JWT if present (not required for this route)
     let requestingUserId: string | undefined
     try {
       await req.jwtVerify()
       requestingUserId = req.user.userId
     } catch {
-      // Guest
+      // Guest — no userId to exclude from cart scan
     }
 
     const stockInfo = await getStockInfo(
