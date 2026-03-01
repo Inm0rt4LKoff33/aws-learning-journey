@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { Product } from "@/app/types/Product"
+import { Product } from "@/app/lib/products.api"
 
 type CartItem = Product & { quantity: number }
 
