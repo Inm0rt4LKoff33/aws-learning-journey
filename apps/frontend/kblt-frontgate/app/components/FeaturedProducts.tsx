@@ -1,8 +1,12 @@
 import ProductCard from "@/app/components/ProductCard"
-import { featuredCards } from "@/app/data/featuredCards"
+import { productsApi } from "@/app/lib/products.api"
 import Link from "next/link"
 
-export default function FeaturedProducts() {
+// Async server component — fetches featured products from the API at render time.
+// No loading state needed here since this is server-rendered before the page sends.
+export default async function FeaturedProducts() {
+  const { products } = await productsApi.getFeatured()
+
   return (
     <section className="py-24" style={{ background: "var(--bg-surface)" }}>
       <div className="mx-auto max-w-7xl px-6">
@@ -25,7 +29,7 @@ export default function FeaturedProducts() {
           </div>
 
           <Link
-            href="/catalog?featured=true"
+            href="/catalog"
             className="text-sm font-semibold transition-colors"
             style={{ color: "var(--crimson-light)" }}
           >
@@ -35,10 +39,11 @@ export default function FeaturedProducts() {
 
         {/* Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {featuredCards.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+
       </div>
     </section>
   )
