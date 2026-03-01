@@ -4,6 +4,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { authApi } from "@/app/lib/auth.api"
 import { tokenManager, ApiError } from "@/app/lib/apiClient"
+import { useCartStore } from "@/app/store/cartStore"
 
 export type User = {
   id:    string
@@ -30,6 +31,10 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { token, user } = await authApi.login(email, password)
           tokenManager.set(token)
+
+          const { syncCart } = useCartStore.getState()
+          await syncCart()
+
           set({ user, token, isAuthenticated: true })
           return { success: true }
         } catch (err) {
@@ -43,6 +48,10 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { token, user } = await authApi.register(name, email, password)
           tokenManager.set(token)
+
+          const { syncCart } = useCartStore.getState()
+          await syncCart()
+
           set({ user, token, isAuthenticated: true })
           return { success: true }
         } catch (err) {

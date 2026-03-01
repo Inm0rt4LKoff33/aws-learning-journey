@@ -1,84 +1,89 @@
-import "zustand/middleware"
+"use client"
 
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { authApi } from "@/app/lib/auth.api"
+import { tokenManager, ApiError } from "@/app/lib/apiClient"
 
 export type User = {
-  id: string
-  name: string
+  id:    string
+  name:  string
   email: string
 }
 
 type AuthState = {
-  user: User | null
+  user:            User | null
+  token:           string | null
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  login:    (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  logout: () => void
+  logout:   () => Promise<void>
 }
-
-// Simulated registered users (in V2 this will hit the .NET API)
-const MOCK_USERS: (User & { password: string })[] = [
-  { id: "user-1", name: "Demo User", email: "demo@kblt.com", password: "password123" },
-]
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
-      user: null,
+    (set, get) => ({
+      user:            null,
+      token:           null,
       isAuthenticated: false,
 
+      // ── Login ───────────────────────────────────────────────────────────────
       login: async (email, password) => {
-        // Simulate network delay
-        await new Promise((r) => setTimeout(r, 600))
-
-        const found = MOCK_USERS.find(
-          (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-        )
-
-        if (!found) {
-          return { success: false, error: "Invalid email or password." }
+        try {
+          const { token, user } = await authApi.login(email, password)
+          tokenManager.set(token)
+          set({ user, token, isAuthenticated: true })
+          return { success: true }
+        } catch (err) {
+          const message = err instanceof ApiError
+            ? err.message
+            : "Something went wrong. Please try again."
+          return { success: false, error: message }
         }
-
-        const { password: _, ...user } = found
-        set({ user, isAuthenticated: true })
-        return { success: true }
       },
 
+      // ── Register ────────────────────────────────────────────────────────────
       register: async (name, email, password) => {
-        await new Promise((r) => setTimeout(r, 600))
-
-        const exists = MOCK_USERS.find(
-          (u) => u.email.toLowerCase() === email.toLowerCase()
-        )
-
-        if (exists) {
-          return { success: false, error: "An account with this email already exists." }
+        try {
+          const { token, user } = await authApi.register(name, email, password)
+          tokenManager.set(token)
+          set({ user, token, isAuthenticated: true })
+          return { success: true }
+        } catch (err) {
+          const message = err instanceof ApiError
+            ? err.message
+            : "Something went wrong. Please try again."
+          return { success: false, error: message }
         }
-
-        const newUser: User & { password: string } = {
-          id: `user-${Date.now()}`,
-          name,
-          email,
-          password,
-        }
-
-        MOCK_USERS.push(newUser)
-
-        const { password: _, ...user } = newUser
-        set({ user, isAuthenticated: true })
-        return { success: true }
       },
 
-      logout: () => set({ user: null, isAuthenticated: false }),
+      // ── Logout ──────────────────────────────────────────────────────────────
+      logout: async () => {
+        try {
+          // Tell the API to blacklist the token in Redis
+          await authApi.logout()
+        } catch {
+          // Logout should always succeed on the client side
+          // even if the API call fails (e.g. token already expired)
+        } finally {
+          tokenManager.clear()
+          set({ user: null, token: null, isAuthenticated: false })
+        }
+      },
     }),
     {
       name: "kblt-auth",
-      // Only persist user + isAuthenticated, not the action functions
       partialize: (state) => ({
-        user: state.user,
+        user:            state.user,
+        token:           state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      // Rehydrate the in-memory token manager when the store loads from localStorage
+      onRehydrateStorage: () => (state) => {
+        if (state?.token) {
+          tokenManager.set(state.token)
+        }
+      },
     }
   )
 )
