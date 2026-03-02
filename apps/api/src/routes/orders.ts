@@ -1,41 +1,38 @@
 import { FastifyInstance } from "fastify"
 import { Decimal } from "@prisma/client/runtime/library"
+import { idParam } from "../lib/schemas"
 
 export default async function orderRoutes(server: FastifyInstance) {
 
-  // All order routes require auth
   server.addHook("preHandler", server.authenticate)
 
   const cartKey = (userId: string) => `cart:${userId}`
 
   // ── POST /orders ───────────────────────────────────────────────────────────
-  // Converts the user's Redis cart into a real Postgres order.
-  // The entire operation is atomic — if anything fails, nothing is committed.
   server.post<{
     Body: { addressId: string }
   }>("/orders", {
+    config: {
+      rateLimit: { max: 10, timeWindow: "1 minute" },
+    },
     schema: {
       body: {
         type: "object",
         required: ["addressId"],
         properties: {
-          addressId: { type: "string" },
+          addressId: { type: "string", minLength: 1 },
         },
       },
     },
   }, async (req, reply) => {
-    const { userId } = req.user
+    const { userId }    = req.user
     const { addressId } = req.body
 
-    // 1. Verify the address belongs to this user
     const address = await server.prisma.address.findFirst({
       where: { id: addressId, userId },
     })
-    if (!address) {
-      return reply.code(404).send({ error: "Address not found." })
-    }
+    if (!address) return reply.code(404).send({ error: "Address not found." })
 
-    // 2. Load the cart from Redis
     const raw = await server.redis.hgetall(cartKey(userId))
     if (!raw || Object.keys(raw).length === 0) {
       return reply.code(400).send({ error: "Your cart is empty." })
@@ -46,18 +43,14 @@ export default async function orderRoutes(server: FastifyInstance) {
       quantity: parseInt(qty, 10),
     }))
 
-    // 3. Load all products in one query
     const products = await server.prisma.product.findMany({
       where: { id: { in: cartItems.map((i) => i.productId) } },
     })
 
-    // 4. Validate stock for every item before touching anything
     for (const cartItem of cartItems) {
       const product = products.find((p) => p.id === cartItem.productId)
       if (!product) {
-        return reply.code(404).send({
-          error: `Product ${cartItem.productId} no longer exists.`,
-        })
+        return reply.code(404).send({ error: `Product ${cartItem.productId} no longer exists.` })
       }
       if (product.stock < cartItem.quantity) {
         return reply.code(409).send({
@@ -66,15 +59,12 @@ export default async function orderRoutes(server: FastifyInstance) {
       }
     }
 
-    // 5. Calculate subtotal
     const subtotal = cartItems.reduce((sum, cartItem) => {
       const product = products.find((p) => p.id === cartItem.productId)!
       return sum + Number(product.price) * cartItem.quantity
     }, 0)
 
-    // 6. Execute everything atomically in a Prisma transaction
     const order = await server.prisma.$transaction(async (tx) => {
-      // Create the order
       const newOrder = await tx.order.create({
         data: {
           userId,
@@ -86,7 +76,7 @@ export default async function orderRoutes(server: FastifyInstance) {
               return {
                 productId:   cartItem.productId,
                 quantity:    cartItem.quantity,
-                priceAtTime: product.price, // snapshot
+                priceAtTime: product.price,
               }
             }),
           },
@@ -97,7 +87,6 @@ export default async function orderRoutes(server: FastifyInstance) {
         },
       })
 
-      // Decrement stock for each product
       for (const cartItem of cartItems) {
         await tx.product.update({
           where: { id: cartItem.productId },
@@ -108,9 +97,7 @@ export default async function orderRoutes(server: FastifyInstance) {
       return newOrder
     })
 
-    // 7. Clear the Redis cart only after the transaction succeeds
     await server.redis.del(cartKey(userId))
-
     return reply.code(201).send({ order })
   })
 
@@ -119,6 +106,7 @@ export default async function orderRoutes(server: FastifyInstance) {
     const orders = await server.prisma.order.findMany({
       where:   { userId: req.user.userId },
       orderBy: { createdAt: "desc" },
+      take:    50,
       include: {
         items:   { include: { product: true } },
         address: true,
@@ -128,7 +116,9 @@ export default async function orderRoutes(server: FastifyInstance) {
   })
 
   // ── GET /orders/:id ────────────────────────────────────────────────────────
-  server.get<{ Params: { id: string } }>("/orders/:id", async (req, reply) => {
+  server.get<{ Params: { id: string } }>("/orders/:id", {
+    schema: { params: idParam },
+  }, async (req, reply) => {
     const order = await server.prisma.order.findFirst({
       where:   { id: req.params.id, userId: req.user.userId },
       include: {

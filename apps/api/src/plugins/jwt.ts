@@ -21,15 +21,19 @@ const jwtPlugin: FastifyPluginAsync = fp(async (server) => {
     sign:     { expiresIn: process.env.JWT_EXPIRES_IN ?? "7d" },
   })
 
-  // Reusable preHandler — add to any route that requires auth:
-  // { preHandler: [server.authenticate] }
   server.decorate(
     "authenticate",
     async (req: FastifyRequest, reply: FastifyReply) => {
-      try {
-        await req.jwtVerify()
-      } catch {
-        reply.code(401).send({ error: "Unauthorized" })
+      await req.jwtVerify()
+
+      const token       = req.headers.authorization?.replace("Bearer ", "") ?? ""
+      const blacklisted = await server.redis.get(`blacklist:${token}`)
+
+      if (blacklisted) {
+        return reply.code(401).send({
+          statusCode: 401,
+          error:      "Token has been invalidated. Please log in again.",
+        })
       }
     }
   )
