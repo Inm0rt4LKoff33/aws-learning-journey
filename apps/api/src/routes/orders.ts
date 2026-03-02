@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify"
 import { Decimal } from "@prisma/client/runtime/library"
-import { idParam } from "../lib/schemas" // NEW
+import { idParam } from "../lib/schemas"
 
 export default async function orderRoutes(server: FastifyInstance) {
 
@@ -12,12 +12,15 @@ export default async function orderRoutes(server: FastifyInstance) {
   server.post<{
     Body: { addressId: string }
   }>("/orders", {
+    config: {
+      rateLimit: { max: 10, timeWindow: "1 minute" },
+    },
     schema: {
       body: {
         type: "object",
         required: ["addressId"],
         properties: {
-          addressId: { type: "string", minLength: 1 }, // NEW — rejects empty string
+          addressId: { type: "string", minLength: 1 },
         },
       },
     },
@@ -103,7 +106,7 @@ export default async function orderRoutes(server: FastifyInstance) {
     const orders = await server.prisma.order.findMany({
       where:   { userId: req.user.userId },
       orderBy: { createdAt: "desc" },
-      take:    50, // NEW — prevents unbounded queries
+      take:    50,
       include: {
         items:   { include: { product: true } },
         address: true,
@@ -114,7 +117,7 @@ export default async function orderRoutes(server: FastifyInstance) {
 
   // ── GET /orders/:id ────────────────────────────────────────────────────────
   server.get<{ Params: { id: string } }>("/orders/:id", {
-    schema: { params: idParam }, // NEW — validates :id
+    schema: { params: idParam },
   }, async (req, reply) => {
     const order = await server.prisma.order.findFirst({
       where:   { id: req.params.id, userId: req.user.userId },

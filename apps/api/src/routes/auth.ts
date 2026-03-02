@@ -7,6 +7,9 @@ export default async function authRoutes(server: FastifyInstance) {
   server.post<{
     Body: { name: string; email: string; password: string }
   }>("/auth/register", {
+    config: {
+      rateLimit: { max: 5, timeWindow: "15 minutes" },
+    },
     schema: {
       body: {
         type: "object",
@@ -40,6 +43,9 @@ export default async function authRoutes(server: FastifyInstance) {
   server.post<{
     Body: { email: string; password: string }
   }>("/auth/login", {
+    config: {
+      rateLimit: { max: 5, timeWindow: "15 minutes" },
+    },
     schema: {
       body: {
         type: "object",
@@ -55,7 +61,6 @@ export default async function authRoutes(server: FastifyInstance) {
 
     const user = await server.prisma.user.findUnique({ where: { email } })
     if (!user) {
-      // Deliberate vague message — don't reveal whether email exists
       return reply.code(401).send({ error: "Invalid email or password." })
     }
 
@@ -72,18 +77,15 @@ export default async function authRoutes(server: FastifyInstance) {
   })
 
   // ── POST /auth/logout ──────────────────────────────────────────────────────
-  // Blacklists the token in Redis until it would naturally expire.
-  // Client should also delete the token from storage.
   server.post("/auth/logout", {
     preHandler: [server.authenticate],
   }, async (req, reply) => {
-    const token = req.headers.authorization?.replace("Bearer ", "") ?? ""
+    const token   = req.headers.authorization?.replace("Bearer ", "") ?? ""
     const decoded = server.jwt.decode<{ exp: number }>(token)
 
     if (decoded?.exp) {
       const ttl = decoded.exp - Math.floor(Date.now() / 1000)
       if (ttl > 0) {
-        // Store in Redis as a blacklist entry until natural expiry
         await server.redis.set(`blacklist:${token}`, "1", "EX", ttl)
       }
     }
