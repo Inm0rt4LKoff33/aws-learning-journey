@@ -4,6 +4,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { authApi } from "@/app/lib/auth.api"
 import { tokenManager, ApiError } from "@/app/lib/apiClient"
+import { useCartStore } from "@/app/store/cartStore"
 
 export type User = {
   id:    string
@@ -26,12 +27,14 @@ export const useAuthStore = create<AuthState>()(
       user:            null,
       token:           null,
       isAuthenticated: false,
-
-      // ── Login ───────────────────────────────────────────────────────────────
       login: async (email, password) => {
         try {
           const { token, user } = await authApi.login(email, password)
           tokenManager.set(token)
+
+          const { syncCart } = useCartStore.getState()
+          await syncCart()
+
           set({ user, token, isAuthenticated: true })
           return { success: true }
         } catch (err) {
@@ -41,12 +44,14 @@ export const useAuthStore = create<AuthState>()(
           return { success: false, error: message }
         }
       },
-
-      // ── Register ────────────────────────────────────────────────────────────
       register: async (name, email, password) => {
         try {
           const { token, user } = await authApi.register(name, email, password)
           tokenManager.set(token)
+
+          const { syncCart } = useCartStore.getState()
+          await syncCart()
+
           set({ user, token, isAuthenticated: true })
           return { success: true }
         } catch (err) {
@@ -56,11 +61,8 @@ export const useAuthStore = create<AuthState>()(
           return { success: false, error: message }
         }
       },
-
-      // ── Logout ──────────────────────────────────────────────────────────────
       logout: async () => {
         try {
-          // Tell the API to blacklist the token in Redis
           await authApi.logout()
         } catch {
           // Logout should always succeed on the client side
@@ -78,7 +80,6 @@ export const useAuthStore = create<AuthState>()(
         token:           state.token,
         isAuthenticated: state.isAuthenticated,
       }),
-      // Rehydrate the in-memory token manager when the store loads from localStorage
       onRehydrateStorage: () => (state) => {
         if (state?.token) {
           tokenManager.set(state.token)

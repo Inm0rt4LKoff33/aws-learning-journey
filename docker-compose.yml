@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+
   redis:
     image: redis:7-alpine
     container_name: kblt-redis
@@ -19,33 +20,24 @@ services:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-    container_name: kbld-api
+    container_name: kblt-api
     ports:
       - "3001:3001"
+    env_file:
+      - ./apps/api/.env
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3001
       - REDIS_URL=redis://redis:6379
-    env_file:
-      - ./api/.env
     depends_on:
       redis:
         condition: service_healthy
-    volumes:
-      - ./api/src:/app/src
-
-  frontend:
-    build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
-    container_name: kbld-frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
-    depends_on:
-      - api
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
 
 volumes:
   redis_data:

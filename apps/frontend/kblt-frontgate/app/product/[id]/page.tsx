@@ -1,5 +1,5 @@
-import { products } from "@/app/data/products"
 import { notFound } from "next/navigation"
+import { productsApi } from "@/app/lib/products.api"
 import ProductClient from "./product-client"
 
 type Props = {
@@ -9,8 +9,21 @@ type Props = {
 export default async function ProductPage({ params }: Props) {
   const { id } = await params
 
-  const product = products.find((p) => p.id === id)
-  if (!product) return notFound()
+  let data
+  try {
+    data = await productsApi.getById(id)
+  } catch {
+    notFound()
+  }
 
-  return <ProductClient product={product} />
+  const { product, availableStock, lowStock, outOfStock } = data
+
+  return (
+    <ProductClient
+      product={product}
+      availableStock={availableStock}
+      lowStock={lowStock}
+      outOfStock={outOfStock}
+    />
+  )
 }
