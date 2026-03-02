@@ -13,7 +13,9 @@ import cartRoutes       from "./routes/cart"
 import orderRoutes      from "./routes/orders"
 import productRoutes    from "./routes/products"
 import userRoutes       from "./routes/users"
+
 import errorHandler from "./plugins/errorHandler"
+import rateLimitPlugin from "./plugins/rateLimit"
 
 const server = Fastify({
   logger: {
@@ -37,7 +39,9 @@ async function bootstrap() {
   await server.register(prismaPlugin)
   await server.register(redisPlugin)
   await server.register(jwtPlugin)
+
   await server.register(errorHandler)
+  await server.register(rateLimitPlugin)
 
   await server.register(authRoutes)
   await server.register(userRoutes)

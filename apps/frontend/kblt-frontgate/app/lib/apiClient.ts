@@ -72,8 +72,10 @@ async function request<T>({ method, path, body, params }: RequestOptions): Promi
     if (qs) url += `?${qs}`
   }
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+  const headers: Record<string, string> = {}
+
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json"
   }
 
   const token = getToken()
