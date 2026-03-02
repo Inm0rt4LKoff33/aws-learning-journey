@@ -4,7 +4,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { useCartStore } from "@/app/store/cartStore"
 import { ShoppingCart } from "lucide-react"
-import { Product } from "@/app/types/Product"
+import { Product } from "../lib/products.api"
+
 
 type Props = {
   product: Product

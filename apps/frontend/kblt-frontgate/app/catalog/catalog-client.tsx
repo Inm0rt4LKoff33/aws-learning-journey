@@ -1,6 +1,6 @@
 "use client"
 
-import { Product } from "@/app/types/Product"
+import { Product } from "@/app/lib/products.api"
 import ProductCard from "@/app/components/ProductCard"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useMemo, useEffect } from "react"
