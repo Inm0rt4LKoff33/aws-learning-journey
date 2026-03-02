@@ -24,17 +24,10 @@ const jwtPlugin: FastifyPluginAsync = fp(async (server) => {
   server.decorate(
     "authenticate",
     async (req: FastifyRequest, reply: FastifyReply) => {
-      // Verify signature and expiry — throws FST_JWT_* errors on failure,
-      // which are caught and normalized by the global error handler in
-      // src/plugins/errorHandler.ts
       await req.jwtVerify()
 
-      // Check token blacklist — populated by POST /auth/logout
-      // Prevents use of tokens that were explicitly invalidated before expiry
       const token       = req.headers.authorization?.replace("Bearer ", "") ?? ""
       const blacklisted = await server.redis.get(`blacklist:${token}`)
-
-      console.log("blacklist check:", `blacklist:${token}`, "result:", blacklisted)
 
       if (blacklisted) {
         return reply.code(401).send({
