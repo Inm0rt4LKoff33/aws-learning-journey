@@ -2,10 +2,18 @@ import ProductCard from "@/app/components/ProductCard"
 import { productsApi } from "@/app/lib/products.api"
 import Link from "next/link"
 
-// Async server component — fetches featured products from the API at render time.
-// No loading state needed here since this is server-rendered before the page sends.
+export const dynamic = "force-dynamic"
+
 export default async function FeaturedProducts() {
-  const { products } = await productsApi.getFeatured()
+  let products: Awaited<ReturnType<typeof productsApi.getFeatured>>["products"] = []
+
+  try {
+    const data = await productsApi.getFeatured()
+    products = data.products
+  } catch {
+    // API unreachable — render empty section silently
+    // The catalog page will still work independently
+  }
 
   return (
     <section className="py-24" style={{ background: "var(--bg-surface)" }}>
@@ -37,12 +45,25 @@ export default async function FeaturedProducts() {
           </Link>
         </div>
 
-        {/* Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {products.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+          >
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="aspect-[610/835] rounded-2xl animate-pulse"
+                style={{ background: "var(--bg-elevated)" }}
+              />
+            ))}
+          </div>
+        )}
 
       </div>
     </section>

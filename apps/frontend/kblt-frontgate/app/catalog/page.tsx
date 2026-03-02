@@ -1,25 +1,32 @@
-import { products } from "@/app/data/products"
 import CatalogClient from "./catalog-client"
+import { productsApi } from "@/app/lib/products.api"
 import { Suspense } from "react"
+
+export const dynamic = "force-dynamic"
+
+export const metadata = {
+  title:       "Catalog — KBLT",
+  description: "Browse rare and authentic trading cards across Pokémon, Yu-Gi-Oh!, and Magic: The Gathering.",
+}
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | undefined }>
 }
 
-export const metadata = {
-  title: "Catalog — KBLT",
-  description: "Browse rare and authentic trading cards across Pokémon, Yu-Gi-Oh!, and Magic: The Gathering.",
-}
-
 export default async function CatalogPage({ searchParams }: Props) {
-  // Next.js 15+: searchParams is a Promise
   const params = await searchParams
 
-  // Pre-filter by game server-side so CatalogClient receives a smaller dataset
-  // when navigating from the Categories section (e.g. /catalog?game=Pokemon)
-  let filtered = [...products]
-  if (params.game) {
-    filtered = filtered.filter((p) => p.game === params.game)
+  let products: Awaited<ReturnType<typeof productsApi.getAll>>["products"] = []
+
+  try {
+    const data = await productsApi.getAll({
+      game:   params.game,
+      search: params.q,
+      limit:  100,
+    })
+    products = data.products
+  } catch {
+    // API unreachable — CatalogClient renders with empty array
   }
 
   return (
@@ -36,7 +43,7 @@ export default async function CatalogPage({ searchParams }: Props) {
         </div>
       }
     >
-      <CatalogClient products={filtered} />
+      <CatalogClient products={products} />
     </Suspense>
   )
 }
