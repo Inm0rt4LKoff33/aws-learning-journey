@@ -2,19 +2,28 @@ import Hero from "@/app/components/Hero"
 import FeaturedProducts from "@/app/components/FeaturedProducts"
 import Categories from "@/app/components/Categories"
 import TrustSection from "@/app/components/TrustSection"
+import { productsApi } from "@/app/lib/products.api"
 import { Suspense } from "react"
 
-export default function Home() {
+export const dynamic = "force-dynamic"
+
+export default async function Home() {
+  let featuredCards: Awaited<ReturnType<typeof productsApi.getFeatured>>["products"] = []
+
+  try {
+    const data = await productsApi.getFeatured()
+    featuredCards = data.products
+  } catch {
+    // API unreachable — Hero renders without the rotating card
+  }
+
   return (
     <main className="min-h-screen" style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}>
-      <Hero />
-      
+      <Hero cards={featuredCards} />
+
       <Suspense
         fallback={
-          <div
-            className="py-24"
-            style={{ background: "var(--bg-surface)" }}
-          >
+          <div className="py-24" style={{ background: "var(--bg-surface)" }}>
             <div className="mx-auto max-w-7xl px-6">
               <div
                 className="h-8 w-48 rounded-lg animate-pulse mb-12"

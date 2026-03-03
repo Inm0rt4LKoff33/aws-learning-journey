@@ -1,7 +1,12 @@
 import Link from "next/link"
 import RotatingHeroCard from "@/app/components/RotatingHeroCard"
+import type { Product } from "@/app/lib/products.api"
 
-export default function Hero() {
+type Props = {
+  cards: Product[]
+}
+
+export default function Hero({ cards }: Props) {
   return (
     <section
       className="relative min-h-[calc(100vh-72px)] flex flex-col lg:flex-row items-center justify-center gap-16 px-6 pt-8 pb-16 overflow-hidden"
@@ -25,10 +30,10 @@ export default function Hero() {
         <span
           className="inline-block mb-5 text-xs font-semibold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border"
           style={{
-            color: "var(--gold)",
+            color:       "var(--gold)",
             borderColor: "var(--gold-muted)",
-            background: "var(--gold-glow)",
-            fontFamily: "var(--font-cinzel-decorative)",
+            background:  "var(--gold-glow)",
+            fontFamily:  "var(--font-cinzel-decorative)",
           }}
         >
           Rare · Authentic · Curated
@@ -52,10 +57,7 @@ export default function Hero() {
 
         {/* CTAs */}
         <div className="flex flex-wrap gap-4">
-          <Link
-            href="/catalog"
-            className="btn-crimson rounded-2xl px-8 py-4 text-base font-semibold"
-          >
+          <Link href="/catalog" className="btn-crimson rounded-2xl px-8 py-4 text-base font-semibold">
             Explore Collection
           </Link>
           <Link
@@ -63,8 +65,8 @@ export default function Hero() {
             className="rounded-2xl px-8 py-4 text-base font-medium border transition-colors"
             style={{
               borderColor: "var(--bg-border)",
-              color: "var(--text-secondary)",
-              background: "var(--bg-elevated)",
+              color:       "var(--text-secondary)",
+              background:  "var(--bg-elevated)",
             }}
           >
             New Arrivals
@@ -93,7 +95,7 @@ export default function Hero() {
           className="absolute w-64 h-64 rounded-full blur-3xl opacity-30"
           style={{ background: "var(--crimson-dark)" }}
         />
-        <RotatingHeroCard />
+        <RotatingHeroCard cards={cards} />
       </div>
 
     </section>
