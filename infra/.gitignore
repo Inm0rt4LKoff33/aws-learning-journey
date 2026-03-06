@@ -1,2 +1,32 @@
 *.pyc
 venv/
+# ── Terraform ─────────────────────────────────────────────────────────────────
+
+# Local .terraform directory contains provider binaries — never commit
+.terraform/
+
+# Lock file IS committed — pins provider versions for reproducible runs
+# .terraform.lock.hcl  ← do NOT add this
+
+# Local state files — state is stored in Terraform Cloud, not locally
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Variable files that may contain secrets — never commit
+*.tfvars
+*.tfvars.json
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI config
+.terraformrc
+terraform.rc
